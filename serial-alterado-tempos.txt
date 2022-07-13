@@ -1,0 +1,47 @@
+## tempo 1 ###########################################
+
+Tempo de allocateScoreMatrix : 0.000977
+
+Tempo de initScoreMatrix : 0.000977
+
+Tempo de LCS : 0.000000
+
+Tempo geral : 0.124023
+
+#######################################################
+
+## tempo 2 ###########################################
+
+Tempo de allocateScoreMatrix : 0.003174
+
+Tempo de initScoreMatrix : 0.000000
+
+Tempo de LCS : 0.002930
+
+Tempo geral : 0.579102
+
+#######################################################
+
+## tempo 3 ###########################################
+
+Tempo de allocateScoreMatrix : 0.002930
+
+Tempo de initScoreMatrix : 0.000977
+
+Tempo de LCS : 0.002930
+
+Tempo geral : 0.635010
+
+#######################################################
+
+## tempo 4 ###########################################
+
+Tempo de allocateScoreMatrix : 0.002930
+
+Tempo de initScoreMatrix : 0.000977
+
+Tempo de LCS : 0.001953
+
+Tempo geral : 0.62402310
+
+#######################################################

@@ -10,9 +10,6 @@
 
 typedef unsigned short mtype;
 
-// Read sequence from a file to a char vector.
-// Filename is passed as parameter */
-
 char* read_seq(char *fname) {
 
 	//file pointer
@@ -146,46 +143,42 @@ double timestamp(){
 }
 
 int main(int argc, char ** argv) {
-	// sequence pointers for both sequences
+
 	char *seqA, *seqB;
-
-	// sizes of both sequences
 	int sizeA, sizeB;
+    double temp1, temp2, temp3, temp_geral;
 
-    // cálculos de tempo
-    double temp = timestamp();
+	temp_geral = timestamp();
 
-	//read both sequences
 	seqA = read_seq("fileA.in");
 	seqB = read_seq("fileB.in");
 
-	//find out sizes
 	sizeA = strlen(seqA);
 	sizeB = strlen(seqB);
 
-	// allocate LCS score matrix
-    double temp = timestamp();
+    temp1 = timestamp();
 	mtype ** scoreMatrix = allocateScoreMatrix(sizeA, sizeB);
-    temp = timestamp() - temp;
-    printf("\nTempo de alocar matriz : %lf\n", temp);
+    temp1 = timestamp() - temp1;
+    printf("\nTempo de allocateScoreMatrix : %lf\n", temp1);
 
-	//initialize LCS score matrix
+	temp2 = timestamp();
 	initScoreMatrix(scoreMatrix, sizeA, sizeB);
+	temp2 = timestamp() - temp2;
+    printf("\nTempo de initScoreMatrix : %lf\n", temp2);
 
-	//fill up the rest of the matrix and return final score (element locate at the last line and collumn)
+	temp3 = timestamp();
 	mtype score = LCS(scoreMatrix, sizeA, sizeB, seqA, seqB);
+	temp3 = timestamp() - temp3;
+    printf("\nTempo de LCS : %lf\n", temp3);
 
-	/* if you wish to see the entire score matrix,
-	 for debug purposes, define DEBUGMATRIX. */
-#ifdef DEBUGMATRIX
-	printMatrix(seqA, seqB, scoreMatrix, sizeA, sizeB);
-#endif
+	// printMatrix(seqA, seqB, scoreMatrix, sizeA, sizeB);
 
-	//print score
-	printf("\nScore: %d\n", score);
+	// printf("\nScore: %d\n", score);
 
-	//free score matrix
 	freeScoreMatrix(scoreMatrix, sizeB);
+
+	temp_geral = timestamp() - temp_geral;
+	printf("\nTempo geral : %lf\n", temp_geral);
 
 	return EXIT_SUCCESS;
 }
