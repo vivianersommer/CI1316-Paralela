@@ -3,24 +3,33 @@
 #include <string.h>
 #include <sys/time.h>
 #include <time.h>
+#include <omp.h>
 
 #ifndef max
 #define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
 #endif
 
+#define NUM_THREADS 4
+
 typedef unsigned short mtype;
 
-char* read_seq(char *fname) {
+// calcula tempo de execucao em milisegundos
+double timestamp(){ 
+  struct timeval tp;
+  gettimeofday(&tp, NULL);
+  return((double)(tp.tv_sec*1000.0 + tp.tv_usec/1000.0));
+}
 
+/* Read sequence from a file to a char vector.
+ Filename is passed as parameter */
+
+char* read_seq(char *fname) {
 	//file pointer
 	FILE *fseq = NULL;
-
 	//sequence size
 	long size = 0;
-
 	//sequence pointer
 	char *seq = NULL;
-    
 	//sequence index
 	int i = 0;
 
@@ -49,7 +58,6 @@ char* read_seq(char *fname) {
 		if ((seq[i] != '\n') && (seq[i] != EOF))
 			i++;
 	}
-
 	//insert string terminator
 	seq[i] = '\0';
 
@@ -71,13 +79,21 @@ mtype ** allocateScoreMatrix(int sizeA, int sizeB) {
 
 void initScoreMatrix(mtype ** scoreMatrix, int sizeA, int sizeB) {
 	int i, j;
+
 	//Fill first line of LCS score matrix with zeroes
-	for (j = 0; j < (sizeA + 1); j++)
+    omp_set_num_threads(NUM_THREADS);
+    
+    // #pragma omp parallel for
+	for (j = 0; j < (sizeA + 1); j++){
 		scoreMatrix[0][j] = 0;
+    }
 
 	//Do the same for the first collumn
-	for (i = 1; i < (sizeB + 1); i++)
+    // #pragma omp parallel for
+	for (i = 1; i < (sizeB + 1); i++){
 		scoreMatrix[i][0] = 0;
+    }
+
 }
 
 int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB) {
@@ -98,7 +114,6 @@ int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB) {
 	}
 	return scoreMatrix[sizeB][sizeA];
 }
-
 void printMatrix(char * seqA, char * seqB, mtype ** scoreMatrix, int sizeA,
 		int sizeB) {
 	int i, j;
@@ -133,13 +148,6 @@ void freeScoreMatrix(mtype **scoreMatrix, int sizeB) {
 	for (i = 0; i < (sizeB + 1); i++)
 		free(scoreMatrix[i]);
 	free(scoreMatrix);
-}
-
-// calcula tempo de execucao em milisegundos
-double timestamp(){ 
-  struct timeval tp;
-  gettimeofday(&tp, NULL);
-  return((double)(tp.tv_sec*1000.0 + tp.tv_usec/1000.0));
 }
 
 int main(int argc, char ** argv) {
@@ -182,5 +190,3 @@ int main(int argc, char ** argv) {
 
 	return EXIT_SUCCESS;
 }
-
-

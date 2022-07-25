@@ -1,0 +1,12 @@
+
+1. Melhor não mexer em read_seq, leitura em paralela vai ficar fora de ordem.
+
+2. Como mexer em allocateScoreMatrix:
+    Tasks talvez?
+    Reduction não funcionaria
+    Vale a pena alocar em paralelo?
+
+3. Como mexer em initScoreMatrix:
+    Colocar #for para zerar matrizes
+    (Isso realmente economiza tempo? Talvez em instâncias muito grandes)
+    OBS: #pragma omp parallel for DEIXOU MAIS LENTO (???????????//)
