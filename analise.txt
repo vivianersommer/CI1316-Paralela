@@ -8,5 +8,7 @@
 
 3. Como mexer em initScoreMatrix:
     Colocar #for para zerar matrizes
-    (Isso realmente economiza tempo? Talvez em instâncias muito grandes)
-    OBS: #pragma omp parallel for DEIXOU MAIS LENTO (???????????//)
+
+
+5. Como mexer em freeScoreMatrix:
+    Colocar #for para dar free (ajuda??)
