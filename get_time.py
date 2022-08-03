@@ -12,7 +12,7 @@ for i in range(5):
     stream = os.popen('time ./a.out')
     output = stream.read()
 
-    with open('readme.txt', 'a') as f:
+    with open('results.txt', 'a') as f:
         f.write('Teste ' + str(i) + ' -------------------')
         f.write(output)
         f.write('-------------------------  ')

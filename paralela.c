@@ -9,7 +9,7 @@
 #define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
 #endif
 
-#define NUM_THREADS 8
+#define NUM_THREADS 2
 
 typedef unsigned short mtype;
 
@@ -89,31 +89,60 @@ void initScoreMatrix(mtype ** scoreMatrix, int sizeA, int sizeB) {
 
 }
 
+void printMatrix(char * seqA, char * seqB, mtype ** scoreMatrix, int sizeA,
+		int sizeB) {
+	int i, j;
+
+	//print header
+	printf("Score Matrix:\n");
+	printf("========================================\n");
+
+	//print LCS score matrix allong with sequences
+
+	printf("    ");
+	printf("%5c   ", ' ');
+
+	for (j = 0; j < sizeA; j++)
+		printf("%5c   ", seqA[j]);
+	printf("\n");
+	for (i = 0; i < sizeB + 1; i++) {
+		if (i == 0)
+			printf("    ");
+		else
+			printf("%c   ", seqB[i - 1]);
+		for (j = 0; j < sizeA + 1; j++) {
+			printf("%5d   ", scoreMatrix[i][j]);
+		}
+		printf("\n");
+	}
+	printf("========================================\n");
+}
+
 int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB) {
 	int i, j;
 
-	#pragma omp parallel for collapse(2) private(i,j) shared(scoreMatrix)
-	for (i = 1; i < sizeB + 1; i++) {
-		for (j = 1; j < sizeA + 1; j++) {
-			if (seqA[j - 1] == seqB[i - 1]) {
-				#pragma omp critical
-				{
+	#pragma omp parallel
+	{
+		#pragma omp for schedule(dynamic) collapse(2)
+		for (i = 1; i < sizeB + 1; i++) {
+			for (j = 1; j < sizeA + 1; j++) {
+				if (seqA[j - 1] == seqB[i - 1]) {
+					/* if elements in both sequences match,
+					the corresponding score will be the score from
+					previous elements + 1*/
 					scoreMatrix[i][j] = scoreMatrix[i - 1][j - 1] + 1;
+				} else {
+					/* else, pick the maximum value (score) from left and upper elements*/
+					scoreMatrix[i][j] =
+							max(scoreMatrix[i-1][j], scoreMatrix[i][j-1]);
 				}
 			}
 		}
 	}
-
-	#pragma omp parallel for collapse(2) private(i,j) shared(scoreMatrix)
-	for (i = 1; i < sizeB + 1; i++) {
-		for (j = 1; j < sizeA + 1; j++) {
-			if (seqA[j - 1] != seqB[i - 1]) {
-				scoreMatrix[i][j] = max(scoreMatrix[i-1][j], scoreMatrix[i][j-1]);
-			}
-		}
-	}
+	
 
 	return scoreMatrix[sizeB][sizeA];
+		
 }
 
 void freeScoreMatrix(mtype **scoreMatrix, int sizeB) {
@@ -133,8 +162,8 @@ int main(int argc, char ** argv) {
 	double end; 
 	start = omp_get_wtime(); 
 
-	seqA = read_seq("fileA.in");
-	seqB = read_seq("fileB.in");
+	seqA = read_seq("entradas/fileA_P.in");
+	seqB = read_seq("entradas/fileB_P.in");
 
 	sizeA = strlen(seqA);
 	sizeB = strlen(seqB);
