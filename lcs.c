@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <omp.h>
 
 #ifndef max
 #define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
@@ -137,16 +138,26 @@ int main(int argc, char ** argv) {
 	// sizes of both sequences
 	int sizeA, sizeB;
 
+	double start, start_read_seq, start_allocateScoreMatrix; 
+	double end , end_read_seq, end_allocateScoreMatrix; 
+	start = omp_get_wtime(); 
+
+	omp_set_num_threads(1);
+
 	//read both sequences
-	seqA = read_seq("fileA.in");
-	seqB = read_seq("fileB.in");
+	start_read_seq = omp_get_wtime();
+	seqA = read_seq("sequenciaA.in");
+	seqB = read_seq("sequenciaB.in");
+	end_read_seq = omp_get_wtime();
 
 	//find out sizes
 	sizeA = strlen(seqA);
 	sizeB = strlen(seqB);
 
 	// allocate LCS score matrix
+	start_allocateScoreMatrix = omp_get_wtime();
 	mtype ** scoreMatrix = allocateScoreMatrix(sizeA, sizeB);
+	end_allocateScoreMatrix = omp_get_wtime();
 
 	//initialize LCS score matrix
 	initScoreMatrix(scoreMatrix, sizeA, sizeB);
@@ -165,6 +176,12 @@ int main(int argc, char ** argv) {
 
 	//free score matrix
 	freeScoreMatrix(scoreMatrix, sizeB);
+
+	end = omp_get_wtime(); 
+	
+	printf("Total took %f seconds\n", end - start);
+	printf("read_seq took %f seconds\n", end_read_seq - start_read_seq);
+	printf("allocateScoreMatrix took %f seconds\n", end_allocateScoreMatrix - start_allocateScoreMatrix);
 
 	return EXIT_SUCCESS;
 }

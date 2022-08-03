@@ -4,60 +4,69 @@
 #include <sys/time.h>
 #include <time.h>
 #include <omp.h>
+#include <math.h>
 
 #ifndef max
 #define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
 #endif
 
-#define NUM_THREADS 2
+#define NUM_THREADS 8
 
+int SUBY_SIZE = 500000;
 typedef unsigned short mtype;
 
 /* Read sequence from a file to a char vector.
  Filename is passed as parameter */
 
-char* read_seq(char *fname) {
-	//file pointer
-	FILE *fseq = NULL;
-	//sequence size
-	long size = 0;
-	//sequence pointer
-	char *seq = NULL;
-	//sequence index
-	int i = 0;
+char** read_seq(char *fname, int type, int *size_temp) {
 
-	//open file
+	FILE *fseq = NULL;
+	char **seq = NULL, *line = NULL;
+	int i = 0, size = 0;
+    size_t lnlen;
+
 	fseq = fopen(fname, "rt");
 	if (fseq == NULL ) {
 		printf("Error reading file %s\n", fname);
 		exit(1);
 	}
 
-	//find out sequence size to allocate memory afterwards
-	fseek(fseq, 0L, SEEK_END);
-	size = ftell(fseq);
-	rewind(fseq);
+    size = getline(&line,&lnlen,fseq);
 
-	//allocate memory (sequence)
-	seq = (char *) calloc(size + 1, sizeof(char));
-	if (seq == NULL ) {
-		printf("Erro allocating memory for sequence %s.\n", fname);
-		exit(1);
+    if (line[size-1] == '\n')
+		size--;
+
+
+	int SUBMAT_SIZE = ceil((double)size / NUM_THREADS); 
+	int num_blocks, type_size;
+
+    if (type == 0) {
+	    num_blocks = ceil((double)size / SUBMAT_SIZE); 
+        type_size = SUBMAT_SIZE;
+    } else {
+	    num_blocks = ceil((double)size / SUBY_SIZE); 
+        type_size = SUBY_SIZE;
+    }
+
+	seq = (char **)malloc(sizeof(char *) * num_blocks);
+
+	for (int b = 0; b < num_blocks; b++) {
+		seq[b] = (char *)malloc(sizeof(char) * (type_size+1));
+		if (((b+1) * type_size) <= size) {
+			strncpy(seq[b],line+(b*type_size),type_size);
+			seq[b][type_size] = '\0';
+		}
+		else {
+			strncpy(seq[b],line+(b*type_size),
+					size - b*type_size);
+			seq[b][size - b*type_size] = '\0';
+		}
 	}
 
-	//read sequence from file
-	while (!feof(fseq)) {
-		seq[i] = fgetc(fseq);
-		if ((seq[i] != '\n') && (seq[i] != EOF))
-			i++;
-	}
-	//insert string terminator
-	seq[i] = '\0';
-
-	//close file
 	fclose(fseq);
 
-	//return sequence pointer
+    *size_temp = size;
+
 	return seq;
 }
 
@@ -65,7 +74,7 @@ mtype ** allocateScoreMatrix(int sizeA, int sizeB) {
 	int i;
 	//Allocate memory for LCS score matrix
 	mtype ** scoreMatrix = (mtype **) malloc((sizeB + 1) * sizeof(mtype *));
-	for (i = 0; i < (sizeB + 1); i++)
+	for (i = 0; i <= sizeB; i++)
 		scoreMatrix[i] = (mtype *) malloc((sizeA + 1) * sizeof(mtype));
 	return scoreMatrix;
 }
@@ -73,17 +82,15 @@ mtype ** allocateScoreMatrix(int sizeA, int sizeB) {
 void initScoreMatrix(mtype ** scoreMatrix, int sizeA, int sizeB) {
 	int i, j;
 
-	//Fill first line of LCS score matrix with zeroes
-    omp_set_num_threads(NUM_THREADS);
-    
+	//Fill first line of LCS score matrix with zeroes    
     #pragma omp parallel for
-	for (j = 0; j < (sizeA + 1); j++){
+	for (j = 0; j < sizeA; j++){
 		scoreMatrix[0][j] = 0;
     }
 
 	//Do the same for the first collumn
     #pragma omp parallel for
-	for (i = 1; i < (sizeB + 1); i++){
+	for (i = 1; i < sizeB; i++){
 		scoreMatrix[i][0] = 0;
     }
 
@@ -93,11 +100,8 @@ void printMatrix(char * seqA, char * seqB, mtype ** scoreMatrix, int sizeA,
 		int sizeB) {
 	int i, j;
 
-	//print header
 	printf("Score Matrix:\n");
 	printf("========================================\n");
-
-	//print LCS score matrix allong with sequences
 
 	printf("    ");
 	printf("%5c   ", ' ');
@@ -118,31 +122,61 @@ void printMatrix(char * seqA, char * seqB, mtype ** scoreMatrix, int sizeA,
 	printf("========================================\n");
 }
 
-int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB) {
-	int i, j;
+int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char **seqA, char **seqB) {
 
-	#pragma omp parallel
+	int d,r,c,rSize,cSize,addR,addC, i,j;
+	int SUBMAT_SIZE = ceil((double)sizeA / NUM_THREADS); 
+	int num_blocksY = ceil((double)sizeB / SUBY_SIZE); 
+	int num_blocksX = ceil((double)sizeA / SUBMAT_SIZE);  
+ 
+	#pragma omp parallel private(i,d,j,r,c,rSize,cSize,addR,addC) num_threads(NUM_THREADS)
 	{
-		#pragma omp for schedule(dynamic) collapse(2)
-		for (i = 1; i < sizeB + 1; i++) {
-			for (j = 1; j < sizeA + 1; j++) {
-				if (seqA[j - 1] == seqB[i - 1]) {
-					/* if elements in both sequences match,
-					the corresponding score will be the score from
-					previous elements + 1*/
-					scoreMatrix[i][j] = scoreMatrix[i - 1][j - 1] + 1;
-				} else {
-					/* else, pick the maximum value (score) from left and upper elements*/
-					scoreMatrix[i][j] =
-							max(scoreMatrix[i-1][j], scoreMatrix[i][j-1]);
-				}
-			}
-		}
-	}
-	
-
-	return scoreMatrix[sizeB][sizeA];
 		
+	d = 0;
+
+	#pragma omp for schedule(dynamic)
+    	for (r = 0 ; r < num_blocksY; r++) {
+            addR = r * SUBY_SIZE;
+            rSize = strlen(seqB[r]);
+
+            for (c = 0; c <= num_blocksX && d < (num_blocksY+num_blocksX-1) ; c++) { 
+        
+                if (c == num_blocksX && d < (num_blocksY-1)) {
+                    break;
+                } else if (c == num_blocksX && d >= (num_blocksY-1)) {
+                    #pragma omp critical
+                    d++;
+                    c--;
+                    continue;
+                }
+
+                while (c > (d-r) ) {
+                    #pragma omp critical
+                    d++;
+                }
+
+                cSize = strlen(seqA[c]);
+                addC = c * SUBMAT_SIZE;
+
+                for (i = 0; i < rSize; i++) {
+                    for (j = 0; j < cSize ; j++) {
+
+                        if (seqA[c][j] == seqB[r][i]) {
+                            scoreMatrix[i+addR+1][j+addC+1] =
+                                    scoreMatrix[i+addR][j+addC] + 1;
+                        }	
+                        else {
+                            scoreMatrix[i+addR+1][j+addC+1] =
+                                max(scoreMatrix[i+addR][j+addC+1],
+                                    scoreMatrix[i+addR+1][j+addC]);
+                        }
+                    }
+                }	
+            }
+        }
+	}
+	return scoreMatrix[sizeB][sizeA];
+
 }
 
 void freeScoreMatrix(mtype **scoreMatrix, int sizeB) {
@@ -155,20 +189,23 @@ void freeScoreMatrix(mtype **scoreMatrix, int sizeB) {
 
 int main(int argc, char ** argv) {
 
-	char *seqA, *seqB;
+	char **seqA, **seqB;
 	int sizeA, sizeB;
 
-	double start; 
-	double end; 
+	double start, start_read_seq, start_allocateScoreMatrix; 
+	double end , end_read_seq, end_allocateScoreMatrix; 
 	start = omp_get_wtime(); 
+	
+	omp_set_num_threads(NUM_THREADS);
 
-	seqA = read_seq("entradas/fileA_P.in");
-	seqB = read_seq("entradas/fileB_P.in");
+	start_read_seq = omp_get_wtime();
+	seqA = read_seq("sequenciaA.in", 0, &sizeA);
+	seqB = read_seq("sequenciaB.in", 1, &sizeB);
+	end_read_seq = omp_get_wtime();
 
-	sizeA = strlen(seqA);
-	sizeB = strlen(seqB);
-
+	start_allocateScoreMatrix = omp_get_wtime();
 	mtype ** scoreMatrix = allocateScoreMatrix(sizeA, sizeB);
+	end_allocateScoreMatrix = omp_get_wtime();
 
 	initScoreMatrix(scoreMatrix, sizeA, sizeB);
 
@@ -179,7 +216,10 @@ int main(int argc, char ** argv) {
 	freeScoreMatrix(scoreMatrix, sizeB);
 
 	end = omp_get_wtime(); 
-	printf("Work took %f seconds\n", end - start);
+
+	printf("Total took %f seconds\n", end - start);
+	printf("read_seq took %f seconds\n", end_read_seq - start_read_seq);
+	printf("allocateScoreMatrix took %f seconds\n", end_allocateScoreMatrix - start_allocateScoreMatrix);
 
 	return EXIT_SUCCESS;
 }

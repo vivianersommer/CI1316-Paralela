@@ -1,0 +1,120 @@
+Teste 0 -------------------
+Score: 11222
+Total took 6.517227 seconds
+read_seq took 0.000560 seconds
+allocateScoreMatrix took 0.081179 seconds
+-------------------------  
+Teste 1 -------------------
+Score: 11222
+Total took 6.557093 seconds
+read_seq took 0.001253 seconds
+allocateScoreMatrix took 0.123951 seconds
+-------------------------  
+Teste 2 -------------------
+Score: 11222
+Total took 6.517409 seconds
+read_seq took 0.000536 seconds
+allocateScoreMatrix took 0.078675 seconds
+-------------------------  
+Teste 3 -------------------
+Score: 11222
+Total took 6.549584 seconds
+read_seq took 0.001286 seconds
+allocateScoreMatrix took 0.098307 seconds
+-------------------------  
+Teste 4 -------------------
+Score: 11222
+Total took 6.542585 seconds
+read_seq took 0.001255 seconds
+allocateScoreMatrix took 0.094069 seconds
+-------------------------  
+Teste 5 -------------------
+Score: 11222
+Total took 6.607673 seconds
+read_seq took 0.001282 seconds
+allocateScoreMatrix took 0.123729 seconds
+-------------------------  
+Teste 6 -------------------
+Score: 11222
+Total took 6.546059 seconds
+read_seq took 0.001255 seconds
+allocateScoreMatrix took 0.096680 seconds
+-------------------------  
+Teste 7 -------------------
+Score: 11222
+Total took 6.550739 seconds
+read_seq took 0.000522 seconds
+allocateScoreMatrix took 0.087320 seconds
+-------------------------  
+Teste 8 -------------------
+Score: 11222
+Total took 6.552759 seconds
+read_seq took 0.000714 seconds
+allocateScoreMatrix took 0.106113 seconds
+-------------------------  
+Teste 9 -------------------
+Score: 11222
+Total took 6.569343 seconds
+read_seq took 0.001248 seconds
+allocateScoreMatrix took 0.101354 seconds
+-------------------------  
+Teste 10 -------------------
+Score: 11222
+Total took 6.539666 seconds
+read_seq took 0.001746 seconds
+allocateScoreMatrix took 0.086028 seconds
+-------------------------  
+Teste 11 -------------------
+Score: 11222
+Total took 6.586087 seconds
+read_seq took 0.001245 seconds
+allocateScoreMatrix took 0.098343 seconds
+-------------------------  
+Teste 12 -------------------
+Score: 11222
+Total took 6.561957 seconds
+read_seq took 0.001263 seconds
+allocateScoreMatrix took 0.115467 seconds
+-------------------------  
+Teste 13 -------------------
+Score: 11222
+Total took 6.538567 seconds
+read_seq took 0.000584 seconds
+allocateScoreMatrix took 0.077670 seconds
+-------------------------  
+Teste 14 -------------------
+Score: 11222
+Total took 6.529627 seconds
+read_seq took 0.001275 seconds
+allocateScoreMatrix took 0.098420 seconds
+-------------------------  
+Teste 15 -------------------
+Score: 11222
+Total took 6.502194 seconds
+read_seq took 0.000517 seconds
+allocateScoreMatrix took 0.083053 seconds
+-------------------------  
+Teste 16 -------------------
+Score: 11222
+Total took 6.575265 seconds
+read_seq took 0.000505 seconds
+allocateScoreMatrix took 0.101974 seconds
+-------------------------  
+Teste 17 -------------------
+Score: 11222
+Total took 6.565401 seconds
+read_seq took 0.001252 seconds
+allocateScoreMatrix took 0.101993 seconds
+-------------------------  
+Teste 18 -------------------
+Score: 11222
+Total took 6.532770 seconds
+read_seq took 0.000519 seconds
+allocateScoreMatrix took 0.084109 seconds
+-------------------------  
+Teste 19 -------------------
+Score: 11222
+Total took 6.542594 seconds
+read_seq took 0.000516 seconds
+allocateScoreMatrix took 0.088628 seconds
+-------------------------  
