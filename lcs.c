@@ -167,21 +167,19 @@ int main(int argc, char ** argv) {
 
 	/* if you wish to see the entire score matrix,
 	 for debug purposes, define DEBUGMATRIX. */
-#ifdef DEBUGMATRIX
-	printMatrix(seqA, seqB, scoreMatrix, sizeA, sizeB);
-#endif
+	// printMatrix(seqA, seqB, scoreMatrix, sizeA, sizeB);
 
 	//print score
-	printf("\nScore: %d\n", score);
+	// printf("\nScore: %d\n", score);
 
 	//free score matrix
 	freeScoreMatrix(scoreMatrix, sizeB);
 
 	end = omp_get_wtime(); 
 	
-	printf("Total took %f seconds\n", end - start);
-	printf("read_seq took %f seconds\n", end_read_seq - start_read_seq);
-	printf("allocateScoreMatrix took %f seconds\n", end_allocateScoreMatrix - start_allocateScoreMatrix);
+	printf("%f\n", end - start);
+	// printf("read_seq took %f seconds\n", end_read_seq - start_read_seq);
+	// printf("allocateScoreMatrix took %f seconds\n", end_allocateScoreMatrix - start_allocateScoreMatrix);
 
 	return EXIT_SUCCESS;
 }

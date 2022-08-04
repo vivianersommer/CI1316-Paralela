@@ -13,10 +13,7 @@ for i in range(20):
     output = stream.read()
 
     with open('results-serial.txt', 'a') as f:
-        f.write('Teste ' + str(i) + ' -------------------')
         f.write(output)
-        f.write('-------------------------  ')
-        f.write('\n')
 
 print("Compilando ...")
 os.system('gcc -fopenmp paralela.c -O3 -lm')
@@ -31,7 +28,4 @@ for i in range(20):
     output = stream.read()
 
     with open('results-paralela.txt', 'a') as f:
-        f.write('Teste ' + str(i) + ' -------------------')
         f.write(output)
-        f.write('-------------------------  ')
-        f.write('\n')

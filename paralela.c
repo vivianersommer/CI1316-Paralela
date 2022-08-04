@@ -10,7 +10,7 @@
 #define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
 #endif
 
-#define NUM_THREADS 8
+#define NUM_THREADS 2
 
 int SUBY_SIZE = 500000;
 typedef unsigned short mtype;
@@ -84,13 +84,13 @@ void initScoreMatrix(mtype ** scoreMatrix, int sizeA, int sizeB) {
 
 	//Fill first line of LCS score matrix with zeroes    
     #pragma omp parallel for
-	for (j = 0; j < sizeA; j++){
+	for (j = 0; j <= sizeA; j++){
 		scoreMatrix[0][j] = 0;
     }
 
 	//Do the same for the first collumn
     #pragma omp parallel for
-	for (i = 1; i < sizeB; i++){
+	for (i = 1; i <= sizeB; i++){
 		scoreMatrix[i][0] = 0;
     }
 
@@ -131,10 +131,9 @@ int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char **seqA, char **seqB) {
  
 	#pragma omp parallel private(i,d,j,r,c,rSize,cSize,addR,addC) num_threads(NUM_THREADS)
 	{
-		
-	d = 0;
+		d = 0;
 
-	#pragma omp for schedule(dynamic)
+		#pragma omp for schedule(dynamic)
     	for (r = 0 ; r < num_blocksY; r++) {
             addR = r * SUBY_SIZE;
             rSize = strlen(seqB[r]);
@@ -144,7 +143,7 @@ int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char **seqA, char **seqB) {
                 if (c == num_blocksX && d < (num_blocksY-1)) {
                     break;
                 } else if (c == num_blocksX && d >= (num_blocksY-1)) {
-                    #pragma omp critical
+                    #pragma omp critical 
                     d++;
                     c--;
                     continue;
@@ -175,8 +174,16 @@ int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char **seqA, char **seqB) {
             }
         }
 	}
-	return scoreMatrix[sizeB][sizeA];
 
+	// for ( i = 0; i <= sizeB; i++) {
+	// 	for ( j = 0; j <= sizeA; j++) {
+	// 		printf("%d\t",scoreMatrix[i][j]);
+	// 	}
+	// 	printf("\n");
+	// }
+
+
+	return scoreMatrix[sizeB][sizeA];
 }
 
 void freeScoreMatrix(mtype **scoreMatrix, int sizeB) {
@@ -211,15 +218,15 @@ int main(int argc, char ** argv) {
 
 	mtype score = LCS(scoreMatrix, sizeA, sizeB, seqA, seqB);
 
-	printf("\nScore: %d\n", score);
+	// printf("\nScore: %d\n", score);
 
 	freeScoreMatrix(scoreMatrix, sizeB);
 
 	end = omp_get_wtime(); 
 
-	printf("Total took %f seconds\n", end - start);
-	printf("read_seq took %f seconds\n", end_read_seq - start_read_seq);
-	printf("allocateScoreMatrix took %f seconds\n", end_allocateScoreMatrix - start_allocateScoreMatrix);
+	printf("%f\n", end - start);
+	// printf("read_seq took %f seconds\n", end_read_seq - start_read_seq);
+	// printf("allocateScoreMatrix took %f seconds\n", end_allocateScoreMatrix - start_allocateScoreMatrix);
 
 	return EXIT_SUCCESS;
 }
