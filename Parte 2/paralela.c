@@ -1,7 +1,15 @@
+/*
+	Viviane da Rosa Sommer - GRR20182564
+	
+    Como rodar:
+        mpicc paralela.c -o paralela  
+        mpirun -np 2 ./paralela
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <mpi.h>
+#include "mpi.h"
 
 #ifndef max
 #define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
@@ -71,27 +79,6 @@ void initScoreMatrix(mtype ** scoreMatrix, int sizeA, int sizeB) {
     }
 }
 
-int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB) {
-
-	int i, j;
-
-    MPI_Datatype col_matrix;
-    MPI_Type_vector(sizeA, 1, sizeB, MPI_SHORT, &col_matrix);
-    MPI_Type_commit(&col_matrix);
-
-	for (i = 1; i < sizeB + 1; i++) {
-		for (j = 1; j < sizeA + 1; j++) {
-			if (seqA[j - 1] == seqB[i - 1]) {
-				scoreMatrix[i][j] = scoreMatrix[i - 1][j - 1] + 1;
-			} else {
-				scoreMatrix[i][j] =max(scoreMatrix[i-1][j], scoreMatrix[i][j-1]);
-			}
-		}
-	}
-
-	return scoreMatrix[sizeB][sizeA];
-}
-
 void printMatrix(char * seqA, char * seqB, mtype ** scoreMatrix, int sizeA,int sizeB) {
 	
     int i, j;
@@ -122,6 +109,55 @@ void printMatrix(char * seqA, char * seqB, mtype ** scoreMatrix, int sizeA,int s
 	printf("========================================\n");
 }
 
+int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB, int numero_processos, int rank) {
+
+	int i, j;
+
+	// REMOVER DEPOIS -----------------------------------------
+	// scoreMatrix[sizeB][sizeA] = 0;
+	// --------------------------------------------------------
+
+	mtype **A = allocateScoreMatrix(sizeA, sizeB);
+
+    MPI_Datatype col_matrix;
+	MPI_Status status;
+    MPI_Type_vector(sizeB, 1, sizeA, MPI_SHORT, &col_matrix);
+    MPI_Type_commit(&col_matrix);
+
+
+    for(int l=0; l<numero_processos; l++){ // enviar para os outros processos,os pedaços da matriz
+        if(l!=rank && rank==0){ 
+			puts("OI1!");
+            MPI_Send(&scoreMatrix[0][0], 1, col_matrix, l, 0, MPI_COMM_WORLD);
+        }
+	}
+
+    for(int l=0; l<numero_processos; l++){ // enviar para os outros processos,os pedaços da matriz
+        if(l!=rank && rank!=0){ 
+			puts("OI2!");
+            MPI_Recv(&A[0][0], 1, col_matrix, 0, 0, MPI_COMM_WORLD, &status);
+        }
+	}
+
+	printf("scoreMatrix:\n");
+	printMatrix(seqA, seqB, scoreMatrix, sizeA, sizeB);
+	printf("A:\n");
+	printMatrix(seqA, seqB, A, sizeA, sizeB);
+
+
+	// for (i = 1; i < sizeB + 1; i++) {
+	// 	for (j = 1; j < sizeA + 1; j++) {
+	// 		if (seqA[j - 1] == seqB[i - 1]) {
+	// 			scoreMatrix[i][j] = scoreMatrix[i - 1][j - 1] + 1;
+	// 		} else {
+	// 			scoreMatrix[i][j] =max(scoreMatrix[i-1][j], scoreMatrix[i][j-1]);
+	// 		}
+	// 	}
+	// }
+
+	return scoreMatrix[sizeB][sizeA];
+}
+
 void freeScoreMatrix(mtype **scoreMatrix, int sizeB) {
 
 	int i;
@@ -140,6 +176,17 @@ int main(int argc, char ** argv) {
 	double start, start_read_seq, start_allocateScoreMatrix, end , end_read_seq, end_allocateScoreMatrix; 
     double tempo_total, tempo_sequencial, inicio, fim;	
 
+	seqA = read_seq("sequenciaA.in");
+	seqB = read_seq("sequenciaB.in");
+
+	sizeA = strlen(seqA);
+	sizeB = strlen(seqB);
+
+	mtype ** scoreMatrix = allocateScoreMatrix(sizeA, sizeB);
+
+	initScoreMatrix(scoreMatrix, sizeA, sizeB);
+
+	// MPI ----------------------------------------------------------------
 	MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &numero_processos);
@@ -151,29 +198,20 @@ int main(int argc, char ** argv) {
 
 	inicio = MPI_Wtime();	
 
-	seqA = read_seq("sequenciaA.in");
-	seqB = read_seq("sequenciaB.in");
-
-	sizeA = strlen(seqA);
-	sizeB = strlen(seqB);
-
-	mtype ** scoreMatrix = allocateScoreMatrix(sizeA, sizeB);
-
-	initScoreMatrix(scoreMatrix, sizeA, sizeB);
-
-	mtype score = LCS(scoreMatrix, sizeA, sizeB, seqA, seqB);
+	mtype score = LCS(scoreMatrix, sizeA, sizeB, seqA, seqB, numero_processos, rank);
 
 	// printMatrix(seqA, seqB, scoreMatrix, sizeA, sizeB);
 
 	printf("\nScore: %d\n", score);
-
-	freeScoreMatrix(scoreMatrix, sizeB);
 
 	fim = MPI_Wtime();
 	tempo_total = inicio - fim;
     printf("Tempo total: %f\n", tempo_total);
     
     MPI_Finalize();
+	// --------------------------------------------------------------------
+
+	freeScoreMatrix(scoreMatrix, sizeB);
 	
 	return EXIT_SUCCESS;
 }
