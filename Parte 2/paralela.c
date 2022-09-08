@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <omp.h>
+#include <mpi.h>
 
 #ifndef max
 #define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
@@ -75,6 +75,10 @@ int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB) {
 
 	int i, j;
 
+    MPI_Datatype col_matrix;
+    MPI_Type_vector(sizeA, 1, sizeB, MPI_SHORT, &col_matrix);
+    MPI_Type_commit(&col_matrix);
+
 	for (i = 1; i < sizeB + 1; i++) {
 		for (j = 1; j < sizeA + 1; j++) {
 			if (seqA[j - 1] == seqB[i - 1]) {
@@ -132,11 +136,20 @@ void freeScoreMatrix(mtype **scoreMatrix, int sizeB) {
 int main(int argc, char ** argv) {
 
 	char *seqA, *seqB;
-	int sizeA, sizeB;
+	int sizeA, sizeB, rank, numero_processos;
 	double start, start_read_seq, start_allocateScoreMatrix, end , end_read_seq, end_allocateScoreMatrix; 
+    double tempo_total, tempo_sequencial, inicio, fim;	
 
-	start = omp_get_wtime(); 
-	omp_set_num_threads(1);
+	MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &numero_processos);
+    if(numero_processos != 2)
+    {
+        printf("Não foi possível abrir 2 processos!\n");
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+    }
+
+	inicio = MPI_Wtime();	
 
 	seqA = read_seq("sequenciaA.in");
 	seqB = read_seq("sequenciaB.in");
@@ -152,11 +165,15 @@ int main(int argc, char ** argv) {
 
 	// printMatrix(seqA, seqB, scoreMatrix, sizeA, sizeB);
 
-	// printf("\nScore: %d\n", score);
+	printf("\nScore: %d\n", score);
 
 	freeScoreMatrix(scoreMatrix, sizeB);
 
-	end = omp_get_wtime(); 
+	fim = MPI_Wtime();
+	tempo_total = inicio - fim;
+    printf("Tempo total: %f\n", tempo_total);
+    
+    MPI_Finalize();
 	
 	return EXIT_SUCCESS;
 }
