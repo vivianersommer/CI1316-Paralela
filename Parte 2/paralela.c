@@ -57,11 +57,17 @@ char* read_seq(char *fname) {
 mtype ** allocateScoreMatrix(int sizeA, int sizeB) {
 
 	int i;
-	mtype ** scoreMatrix = (mtype **) malloc((sizeB + 1) * sizeof(mtype *));
+	// mtype ** scoreMatrix = (mtype **) malloc((sizeB + 1) * sizeof(mtype *));
 
-	for (i = 0; i < (sizeB + 1); i++){
-		scoreMatrix[i] = (mtype *) malloc((sizeA + 1) * sizeof(mtype));
-    }
+	// for (i = 0; i < (sizeB + 1); i++){
+	// 	scoreMatrix[i] = (mtype *) malloc((sizeA + 1) * sizeof(mtype));
+    // }
+
+	mtype ** scoreMatrix = malloc((sizeB + 1) * sizeof(mtype *));        /*allocating pointers */
+	scoreMatrix[0] = malloc((sizeB + 1) * (sizeA + 1) * sizeof(mtype *));  /* allocating data */
+	for(i=1; i<(sizeA + 1); i++){
+		scoreMatrix[i]=&(scoreMatrix[0][i*(sizeA + 1)]);
+	}
 
 	return scoreMatrix;
 }
@@ -122,9 +128,21 @@ int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB, int
 
     MPI_Datatype col_matrix;
 	MPI_Status status;
-    MPI_Type_vector(6, 1, 9, MPI_UNSIGNED_SHORT, &col_matrix);
+    MPI_Type_vector((sizeB + 1), 1, (sizeA + 1), MPI_UNSIGNED_SHORT, &col_matrix);
     MPI_Type_commit(&col_matrix);
 	
+	tanana = 1;
+	for (int p = 0; p < (sizeB + 1); p++){
+		for (int o = 0; o < (sizeA + 1); o++){
+			scoreMatrix[p][o] = tanana;
+			tanana++;
+		}
+	} 
+
+	// printf("teste = %5d\n", scoreMatrix[0][0]);
+	// printf("teste = %5d\n", scoreMatrix[1][0]);
+	// printf("teste = %5d\n", scoreMatrix[2][0]);
+	// printf("teste = %5d\n", scoreMatrix[3][0]);
 
 	if(rank == 0){
 		
@@ -136,6 +154,7 @@ int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB, int
 		coluna = 0;
 		MPI_Send(&coluna, 			 1, MPI_INT,    1, 0, MPI_COMM_WORLD);
 		MPI_Send(&scoreMatrix[0][0], 1, col_matrix, 1, 0, MPI_COMM_WORLD);
+		// MPI_Send(&scoreMatrix[0][0], 1, col_matrix, 1, 0, MPI_COMM_WORLD);
 	} else {
 
 		printf("\n --------------------------------- \n");
@@ -145,7 +164,7 @@ int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB, int
 		printf("\n --------------------------------- \n");
 
 		MPI_Recv(&coluna, 			 1,     MPI_INT, 	0, 0, MPI_COMM_WORLD, &status);
-        MPI_Recv(&A[0], 	 7, MPI_UNSIGNED_SHORT, 0, 0, MPI_COMM_WORLD, &status);
+        MPI_Recv(&A[0], 	 11, MPI_UNSIGNED_SHORT, 0, 0, MPI_COMM_WORLD, &status);
 		
 		printf("\n --------------------------------- \n");
 		for (int i = 0; i < (sizeB + 1); i++){
@@ -221,7 +240,7 @@ int main(int argc, char ** argv) {
     MPI_Finalize();
 	// --------------------------------------------------------------------
 
-	freeScoreMatrix(scoreMatrix, sizeB);
+	// freeScoreMatrix(scoreMatrix, sizeB);
 	
 	return EXIT_SUCCESS;
 }
