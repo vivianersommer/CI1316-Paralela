@@ -117,7 +117,7 @@ void printMatrix(char * seqA, char * seqB, mtype ** scoreMatrix, int sizeA,int s
 
 int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB, int numero_processos, int rank) {
 
-	int coluna1 = 0, coluna2 = 1, l;
+	int coluna1 = 0, coluna2 = 1, l = 0;
 
 	mtype *A = malloc(sizeof(unsigned char) * (sizeB + 1));
 	mtype *B = malloc(sizeof(unsigned char) * (sizeB + 1));
@@ -129,19 +129,22 @@ int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB, int
 
 	if(rank == 0){
 
-		for(l=0; l<numero_processos; l++){
+		for(l=0; l< (sizeA + 1); l++){
             if(l != rank){ 
-				MPI_Ssend(&scoreMatrix[0][coluna1], 1, col_matrix, 1, 0, MPI_COMM_WORLD);
-				MPI_Ssend(&scoreMatrix[0][coluna2], 1, col_matrix, 1, 0, MPI_COMM_WORLD);
-				MPI_Ssend(&coluna1, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
-				MPI_Ssend(&coluna2, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
+				printf("RTESTE = %d\n", l%(numero_processos));
 
-				MPI_Recv(&scoreMatrix[0][coluna2], 1, col_matrix, 1, 0, MPI_COMM_WORLD, &status);
+				MPI_Ssend(&scoreMatrix[0][coluna1], 1, col_matrix, l%(numero_processos), 0, MPI_COMM_WORLD);
+				MPI_Ssend(&scoreMatrix[0][coluna2], 1, col_matrix, l%(numero_processos), 0, MPI_COMM_WORLD);
+				MPI_Ssend(&coluna1, 1, MPI_INT, l%(numero_processos), 0, MPI_COMM_WORLD);
+				MPI_Ssend(&coluna2, 1, MPI_INT, l%(numero_processos), 0, MPI_COMM_WORLD);
+
+				MPI_Recv(&scoreMatrix[0][coluna2], 1, col_matrix, l%(numero_processos -1), 0, MPI_COMM_WORLD, &status);
+				puts("RECEBI!!");
 				coluna1++;
 				coluna2++;
             }
 		}
-		
+
 		printMatrix(seqA, seqB, scoreMatrix, sizeA, sizeB);
 
 
@@ -168,6 +171,7 @@ int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB, int
 		printf("\n --------------------------------- \n");
 
 		MPI_Ssend(&B[0], (sizeB + 1), MPI_UNSIGNED_SHORT, 0, 0, MPI_COMM_WORLD);
+		puts("ENVIEI!!!");
 
 	}	
 
