@@ -117,7 +117,7 @@ void printMatrix(char * seqA, char * seqB, mtype ** scoreMatrix, int sizeA,int s
 
 int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB, int numero_processos, int rank) {
 
-	int coluna1 = 0, coluna2 = 1, l = 0;
+	int coluna1 = 0, coluna2 = 1, l = 0, destino = 0;
 
 	mtype *A = malloc(sizeof(unsigned char) * (sizeB + 1));
 	mtype *B = malloc(sizeof(unsigned char) * (sizeB + 1));
@@ -131,14 +131,16 @@ int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB, int
 
 		for(l=0; l< sizeA; l++){
             if(l != rank){ 
-				printf("RTESTE = %d\n", l%(numero_processos));
 
-				MPI_Send(&scoreMatrix[0][coluna1], 1, col_matrix, l%(numero_processos), 0, MPI_COMM_WORLD);
-				MPI_Send(&scoreMatrix[0][coluna2], 1, col_matrix, l%(numero_processos), 0, MPI_COMM_WORLD);
-				MPI_Send(&coluna1, 1, MPI_INT, l%(numero_processos), 0, MPI_COMM_WORLD);
-				MPI_Send(&coluna2, 1, MPI_INT, l%(numero_processos), 0, MPI_COMM_WORLD);
+				destino = l%(numero_processos - 1) + 1;
+				printf("destino = %d\n", destino);
 
-				MPI_Recv(&scoreMatrix[0][coluna2], 1, col_matrix, l%(numero_processos), 0, MPI_COMM_WORLD, &status);
+				MPI_Send(&scoreMatrix[0][coluna1], 1, col_matrix, destino, 0, MPI_COMM_WORLD);
+				MPI_Send(&scoreMatrix[0][coluna2], 1, col_matrix, destino, 0, MPI_COMM_WORLD);
+				MPI_Send(&coluna1, 1, MPI_INT, destino, 0, MPI_COMM_WORLD);
+				MPI_Send(&coluna2, 1, MPI_INT, destino, 0, MPI_COMM_WORLD);
+
+				MPI_Recv(&scoreMatrix[0][coluna2], 1, col_matrix, destino, 0, MPI_COMM_WORLD, &status);
 				puts("RECEBI!!");
 				coluna1++;
 				coluna2++;
@@ -151,7 +153,6 @@ int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB, int
 	} else {
 
 		int i, j;
-		printf("RANK = %d\n", rank);
         MPI_Recv(&A[0], (sizeB + 1), MPI_UNSIGNED_SHORT, 0, 0, MPI_COMM_WORLD, &status);
 		MPI_Recv(&B[0], (sizeB + 1), MPI_UNSIGNED_SHORT, 0, 0, MPI_COMM_WORLD, &status);
 		MPI_Recv(&coluna1, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
