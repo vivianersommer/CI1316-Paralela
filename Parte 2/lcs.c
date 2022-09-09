@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <omp.h>
 
 #ifndef max
 #define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
@@ -140,24 +139,24 @@ int main(int argc, char ** argv) {
 
 	double start, start_read_seq, start_allocateScoreMatrix; 
 	double end , end_read_seq, end_allocateScoreMatrix; 
-	start = omp_get_wtime(); 
+	// start = omp_get_wtime(); 
 
-	omp_set_num_threads(1);
+	// omp_set_num_threads(1);
 
 	//read both sequences
-	start_read_seq = omp_get_wtime();
+	// start_read_seq = omp_get_wtime();
 	seqA = read_seq("sequenciaA.in");
 	seqB = read_seq("sequenciaB.in");
-	end_read_seq = omp_get_wtime();
+	// end_read_seq = omp_get_wtime();
 
 	//find out sizes
 	sizeA = strlen(seqA);
 	sizeB = strlen(seqB);
 
 	// allocate LCS score matrix
-	start_allocateScoreMatrix = omp_get_wtime();
+	// start_allocateScoreMatrix = omp_get_wtime();
 	mtype ** scoreMatrix = allocateScoreMatrix(sizeA, sizeB);
-	end_allocateScoreMatrix = omp_get_wtime();
+	// end_allocateScoreMatrix = omp_get_wtime();
 
 	//initialize LCS score matrix
 	initScoreMatrix(scoreMatrix, sizeA, sizeB);
@@ -167,7 +166,7 @@ int main(int argc, char ** argv) {
 
 	/* if you wish to see the entire score matrix,
 	 for debug purposes, define DEBUGMATRIX. */
-	// printMatrix(seqA, seqB, scoreMatrix, sizeA, sizeB);
+	printMatrix(seqA, seqB, scoreMatrix, sizeA, sizeB);
 
 	//print score
 	// printf("\nScore: %d\n", score);
@@ -175,9 +174,9 @@ int main(int argc, char ** argv) {
 	//free score matrix
 	freeScoreMatrix(scoreMatrix, sizeB);
 
-	end = omp_get_wtime(); 
+	// end = omp_get_wtime(); 
 	
-	printf("%f\n", end - start);
+	// printf("%f\n", end - start);
 	// printf("read_seq took %f seconds\n", end_read_seq - start_read_seq);
 	// printf("allocateScoreMatrix took %f seconds\n", end_allocateScoreMatrix - start_allocateScoreMatrix);
 
