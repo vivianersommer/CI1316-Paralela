@@ -111,40 +111,50 @@ void printMatrix(char * seqA, char * seqB, mtype ** scoreMatrix, int sizeA,int s
 
 int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB, int numero_processos, int rank) {
 
-	int i, j;
+	int coluna;
 
-	// REMOVER DEPOIS -----------------------------------------
-	// scoreMatrix[sizeB][sizeA] = 0;
-	// --------------------------------------------------------
-
-	mtype **A = allocateScoreMatrix(sizeA, sizeB);
+	mtype *A = malloc(sizeof(unsigned char) * (sizeB + 1));
+	mtype tanana = 0;
+	for (int i = 0; i < (sizeB + 1); i++){
+		A[i] = tanana;
+		tanana++;
+	}
 
     MPI_Datatype col_matrix;
 	MPI_Status status;
-    MPI_Type_vector(sizeB, 1, sizeA, MPI_SHORT, &col_matrix);
+    MPI_Type_vector(6, 1, 9, MPI_UNSIGNED_SHORT, &col_matrix);
     MPI_Type_commit(&col_matrix);
+	
 
+	if(rank == 0){
+		
+		printf("\n sizeA = %d\n", sizeA);
+		printf("\n sizeB = %d\n", sizeB);
+		printMatrix(seqA, seqB, scoreMatrix, sizeA, sizeB);
+		// score Matrix {11 colunas, 8 linhas}
 
-    for(int l=0; l<numero_processos; l++){ // enviar para os outros processos,os pedaços da matriz
-        if(l!=rank && rank==0){ 
-			puts("OI1!");
-            MPI_Send(&scoreMatrix[0][0], 1, col_matrix, l, 0, MPI_COMM_WORLD);
-        }
-	}
+		coluna = 0;
+		MPI_Send(&coluna, 			 1, MPI_INT,    1, 0, MPI_COMM_WORLD);
+		MPI_Send(&scoreMatrix[0][0], 1, col_matrix, 1, 0, MPI_COMM_WORLD);
+	} else {
 
-    for(int l=0; l<numero_processos; l++){ // enviar para os outros processos,os pedaços da matriz
-        if(l!=rank && rank!=0){ 
-			puts("OI2!");
-            MPI_Recv(&A[0][0], 1, col_matrix, 0, 0, MPI_COMM_WORLD, &status);
-        }
-	}
+		printf("\n --------------------------------- \n");
+		for (int i = 0; i < (sizeB + 1); i++){
+			printf(" %d ", A[i]);
+		}
+		printf("\n --------------------------------- \n");
 
-	printf("scoreMatrix:\n");
-	printMatrix(seqA, seqB, scoreMatrix, sizeA, sizeB);
-	printf("A:\n");
-	printMatrix(seqA, seqB, A, sizeA, sizeB);
+		MPI_Recv(&coluna, 			 1,     MPI_INT, 	0, 0, MPI_COMM_WORLD, &status);
+        MPI_Recv(&A[0], 	 7, MPI_UNSIGNED_SHORT, 0, 0, MPI_COMM_WORLD, &status);
+		
+		printf("\n --------------------------------- \n");
+		for (int i = 0; i < (sizeB + 1); i++){
+			printf(" %d ", A[i]);
+		}
+		printf("\n --------------------------------- \n");
+	}	
 
-
+	// int i, j;
 	// for (i = 1; i < sizeB + 1; i++) {
 	// 	for (j = 1; j < sizeA + 1; j++) {
 	// 		if (seqA[j - 1] == seqB[i - 1]) {
