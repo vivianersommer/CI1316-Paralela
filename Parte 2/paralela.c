@@ -135,16 +135,19 @@ int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB, int
 				destino = l%(numero_processos - 1) + 1;
 				// printf("destino = %d\n", destino);
 
-				MPI_Ssend(&scoreMatrix[0][coluna1], 1, col_matrix, destino, 0, MPI_COMM_WORLD);
-				MPI_Ssend(&scoreMatrix[0][coluna2], 1, col_matrix, destino, 0, MPI_COMM_WORLD);
-				MPI_Ssend(&coluna1, 1, MPI_INT, destino, 0, MPI_COMM_WORLD);
-				MPI_Ssend(&coluna2, 1, MPI_INT, destino, 0, MPI_COMM_WORLD);
+				MPI_Send(&scoreMatrix[0][coluna1], 1, col_matrix, destino, 0, MPI_COMM_WORLD);
+				MPI_Send(&scoreMatrix[0][coluna2], 1, col_matrix, destino, 0, MPI_COMM_WORLD);
+				MPI_Send(&coluna1, 1, MPI_INT, destino, 0, MPI_COMM_WORLD);
+				MPI_Send(&coluna2, 1, MPI_INT, destino, 0, MPI_COMM_WORLD);
 
 				MPI_Recv(&scoreMatrix[0][coluna2], 1, col_matrix, destino, 0, MPI_COMM_WORLD, &status);
 				coluna1++;
 				coluna2++;
             }
 		}
+
+		printMatrix(seqA, seqB, scoreMatrix, sizeA, sizeB);
+
 
 	} else {
 
@@ -164,8 +167,6 @@ int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB, int
 
 		MPI_Ssend(&B[0], (sizeB + 1), MPI_UNSIGNED_SHORT, 0, 0, MPI_COMM_WORLD);
 	}	
-
-	printMatrix(seqA, seqB, scoreMatrix, sizeA, sizeB);
 
 	return scoreMatrix[sizeB][sizeA];
 }
