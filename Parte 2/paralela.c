@@ -120,69 +120,46 @@ int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB, int
 	int coluna;
 
 	mtype *A = malloc(sizeof(unsigned char) * (sizeB + 1));
-	mtype tanana = 0;
-	for (int i = 0; i < (sizeB + 1); i++){
-		A[i] = tanana;
-		tanana++;
-	}
+	mtype *B = malloc(sizeof(unsigned char) * (sizeB + 1));
 
     MPI_Datatype col_matrix;
 	MPI_Status status;
     MPI_Type_vector((sizeB + 1), 1, (sizeA + 1), MPI_UNSIGNED_SHORT, &col_matrix);
     MPI_Type_commit(&col_matrix);
-	
-	tanana = 1;
-	for (int p = 0; p < (sizeB + 1); p++){
-		for (int o = 0; o < (sizeA + 1); o++){
-			scoreMatrix[p][o] = tanana;
-			tanana++;
-		}
-	} 
-
-	// printf("teste = %5d\n", scoreMatrix[0][0]);
-	// printf("teste = %5d\n", scoreMatrix[1][0]);
-	// printf("teste = %5d\n", scoreMatrix[2][0]);
-	// printf("teste = %5d\n", scoreMatrix[3][0]);
 
 	if(rank == 0){
 		
-		printf("\n sizeA = %d\n", sizeA);
-		printf("\n sizeB = %d\n", sizeB);
 		printMatrix(seqA, seqB, scoreMatrix, sizeA, sizeB);
-		// score Matrix {11 colunas, 8 linhas}
-
-		coluna = 0;
-		MPI_Send(&coluna, 			 1, MPI_INT,    1, 0, MPI_COMM_WORLD);
 		MPI_Send(&scoreMatrix[0][0], 1, col_matrix, 1, 0, MPI_COMM_WORLD);
-		// MPI_Send(&scoreMatrix[0][0], 1, col_matrix, 1, 0, MPI_COMM_WORLD);
+		MPI_Send(&scoreMatrix[0][1], 1, col_matrix, 1, 0, MPI_COMM_WORLD);
 	} else {
 
+		int i, j;
+        MPI_Recv(&A[0], (sizeB + 1), MPI_UNSIGNED_SHORT, 0, 0, MPI_COMM_WORLD, &status);
+		MPI_Recv(&B[0], (sizeB + 1), MPI_UNSIGNED_SHORT, 0, 0, MPI_COMM_WORLD, &status);
+
 		printf("\n --------------------------------- \n");
-		for (int i = 0; i < (sizeB + 1); i++){
+		for (i = 0; i < (sizeB + 1); i++){
 			printf(" %d ", A[i]);
+		}
+		printf("\n --------------------------------- \n");
+		printf("\n --------------------------------- \n");
+		for (i = 0; i < (sizeB + 1); i++){
+			printf(" %d ", B[i]);
 		}
 		printf("\n --------------------------------- \n");
 
-		MPI_Recv(&coluna, 			 1,     MPI_INT, 	0, 0, MPI_COMM_WORLD, &status);
-        MPI_Recv(&A[0], 	 11, MPI_UNSIGNED_SHORT, 0, 0, MPI_COMM_WORLD, &status);
-		
-		printf("\n --------------------------------- \n");
-		for (int i = 0; i < (sizeB + 1); i++){
-			printf(" %d ", A[i]);
-		}
-		printf("\n --------------------------------- \n");
+		// for (i = 1; i < sizeB + 1; i++) {
+		// 	for (j = 1; j < sizeA + 1; j++) {
+		// 		if (seqA[j - 1] == seqB[i - 1]) {
+		// 			scoreMatrix[i][j] = scoreMatrix[i - 1][j - 1] + 1;
+		// 		} else {
+		// 			scoreMatrix[i][j] =max(scoreMatrix[i-1][j], scoreMatrix[i][j-1]);
+		// 		}
+		// 	}
+		// }
+
 	}	
-
-	// int i, j;
-	// for (i = 1; i < sizeB + 1; i++) {
-	// 	for (j = 1; j < sizeA + 1; j++) {
-	// 		if (seqA[j - 1] == seqB[i - 1]) {
-	// 			scoreMatrix[i][j] = scoreMatrix[i - 1][j - 1] + 1;
-	// 		} else {
-	// 			scoreMatrix[i][j] =max(scoreMatrix[i-1][j], scoreMatrix[i][j-1]);
-	// 		}
-	// 	}
-	// }
 
 	return scoreMatrix[sizeB][sizeA];
 }
