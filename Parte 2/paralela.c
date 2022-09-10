@@ -134,14 +134,14 @@ int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB, int
 
 				destino = l%(numero_processos - 1) + 1;
 
-				// printf("Rank %d - ENVIANDO PRA %d\n", rank, destino);
+				printf("Rank %d - ENVIANDO PRA %d\n", rank, destino);
 				MPI_Send(&scoreMatrix[0][coluna1], 1, col_matrix, destino, 0, MPI_COMM_WORLD);
 				MPI_Send(&scoreMatrix[0][coluna2], 1, col_matrix, destino, 0, MPI_COMM_WORLD);
 				MPI_Send(&coluna1, 1, MPI_INT, destino, 0, MPI_COMM_WORLD);
 				MPI_Send(&coluna2, 1, MPI_INT, destino, 0, MPI_COMM_WORLD);
 
 				MPI_Recv(&scoreMatrix[0][coluna2], 1, col_matrix, destino, 0, MPI_COMM_WORLD, &status);
-				// printf("Rank %d - RECEBI!\n", rank);
+				printf("Rank %d - RECEBI!\n", rank);
 
 				coluna1++;
 				coluna2++;
@@ -157,10 +157,19 @@ int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB, int
 		int termina_div = sizeA / (numero_processos - 1);
 		int fim = 0;
 
+		// 4 3 3
+		// 1 2 3 
+		// 1 - mod
+		// rank
+
 		if(termina_mod == 0){
 			fim = termina_div;
 		} else {
-			fim = termina_div + ((rank + 1) % (numero_processos - 1));
+			if (termina_mod >= rank){
+				fim = termina_div + termina_mod;
+			} else {
+				fim = termina_div;
+			}
 		}
 
 		do{
