@@ -132,7 +132,7 @@ int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB, int
 		for(l=0; l< (sizeA + 1); l++){
             if(l != rank){ 
 
-				destino = l%(numero_processos - 1) + 1;
+				destino = (l%(numero_processos - 1) == 0) ? (numero_processos - 1): (l%(numero_processos - 1));
 
 				printf("Rank %d - ENVIANDO PRA %d\n", rank, destino);
 				MPI_Send(&scoreMatrix[0][coluna1], 1, col_matrix, destino, 0, MPI_COMM_WORLD);
