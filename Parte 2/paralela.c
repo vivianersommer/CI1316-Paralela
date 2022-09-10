@@ -117,7 +117,7 @@ void printMatrix(char * seqA, char * seqB, mtype ** scoreMatrix, int sizeA,int s
 
 int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB, int numero_processos, int rank) {
 
-	int coluna1 = 0, coluna2 = 1, l = 0, destino = 0, tag_ida = 0, tag_volta = 0;
+	int coluna1 = 0, coluna2 = 1, l = 0, destino = 0;
 
 	mtype *A = malloc(sizeof(unsigned char) * (sizeB + 1));
 	mtype *B = malloc(sizeof(unsigned char) * (sizeB + 1));
@@ -134,14 +134,14 @@ int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB, int
 
 				destino = l%(numero_processos - 1) + 1;
 
-				printf("Rank %d - ENVIANDO PRA %d\n", rank, destino);
+				// printf("Rank %d - ENVIANDO PRA %d\n", rank, destino);
 				MPI_Send(&scoreMatrix[0][coluna1], 1, col_matrix, destino, 0, MPI_COMM_WORLD);
 				MPI_Send(&scoreMatrix[0][coluna2], 1, col_matrix, destino, 0, MPI_COMM_WORLD);
 				MPI_Send(&coluna1, 1, MPI_INT, destino, 0, MPI_COMM_WORLD);
 				MPI_Send(&coluna2, 1, MPI_INT, destino, 0, MPI_COMM_WORLD);
 
 				MPI_Recv(&scoreMatrix[0][coluna2], 1, col_matrix, destino, 0, MPI_COMM_WORLD, &status);
-				printf("Rank %d - RECEBI!\n", rank);
+				// printf("Rank %d - RECEBI!\n", rank);
 
 				coluna1++;
 				coluna2++;
@@ -153,7 +153,19 @@ int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB, int
 
 	} else {
 
+		int termina_mod = sizeA % (numero_processos - 1);
+		int termina_div = sizeA / (numero_processos - 1);
+		int fim = 0;
+
+		if(termina_mod == 0){
+			fim = termina_div;
+		} else {
+			fim = termina_div + ((rank + 1) % (numero_processos - 1));
+		}
+
 		do{
+
+			fim--;
 
 			int i, j;
 			MPI_Recv(&A[0], (sizeB + 1), MPI_UNSIGNED_SHORT, 0, 0, MPI_COMM_WORLD, &status);
@@ -177,9 +189,9 @@ int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB, int
 
 			MPI_Ssend(&B[0], (sizeB + 1), MPI_UNSIGNED_SHORT, 0, 0, MPI_COMM_WORLD);
 
-			printf("Rank %d - ENVIEI!\n", rank);
+			// printf("Rank %d - ENVIEI!\n", rank);
 
-		} while (coluna2 != sizeA);
+		} while (fim != 0);
 	}	
 
 	MPI_Finalize();
