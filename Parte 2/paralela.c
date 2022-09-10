@@ -194,8 +194,6 @@ int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB, int
 		} while (fim != 0);
 	}	
 
-	MPI_Finalize();
-
 	return scoreMatrix[sizeB][sizeA];
 }
 
@@ -231,26 +229,23 @@ int main(int argc, char ** argv) {
 	MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &numero_processos);
-    if(numero_processos != 3)
-    {
-        printf("Não foi possível abrir 3 processos!\n");
-        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
-    }
 
-	// inicio = MPI_Wtime();	
+	inicio = MPI_Wtime();	
 
 	mtype score = LCS(scoreMatrix, sizeA, sizeB, seqA, seqB, numero_processos, rank);
 
 	// printMatrix(seqA, seqB, scoreMatrix, sizeA, sizeB);
 
-	printf("\nScore: %d\n", score);
-
-	// fim = MPI_Wtime();
-	// tempo_total = inicio - fim;
-    // printf("Tempo total: %f\n", tempo_total);
+	fim = MPI_Wtime();
+	tempo_total = inicio - fim;
     
-    // MPI_Finalize();
-	// --------------------------------------------------------------------
+    MPI_Finalize();
+	//--------------------------------------------------------------------
+
+	if (rank == 0){
+		printf("\nScore: %d\n", score);
+		printf("Tempo total: %f\n", tempo_total);
+	}
 
 	// freeScoreMatrix(scoreMatrix, sizeB);
 	
