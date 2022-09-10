@@ -129,14 +129,12 @@ int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB, int
 
 	if(rank == 0){
 
-		for(l=0; l< sizeA; l++){
+		for(l=0; l< (sizeA + 1); l++){
             if(l != rank){ 
 
 				destino = l%(numero_processos - 1) + 1;
-				// printf("destino = %d\n", destino);
 
 				printf("Rank %d - ENVIANDO PRA %d\n", rank, destino);
-				MPI_Send(&tag_ida, 1, MPI_INT, destino, 0, MPI_COMM_WORLD);
 				MPI_Send(&scoreMatrix[0][coluna1], 1, col_matrix, destino, 0, MPI_COMM_WORLD);
 				MPI_Send(&scoreMatrix[0][coluna2], 1, col_matrix, destino, 0, MPI_COMM_WORLD);
 				MPI_Send(&coluna1, 1, MPI_INT, destino, 0, MPI_COMM_WORLD);
@@ -155,7 +153,7 @@ int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB, int
 
 	} else {
 
-		while (coluna2 != sizeA){
+		do{
 
 			int i, j;
 			MPI_Recv(&A[0], (sizeB + 1), MPI_UNSIGNED_SHORT, 0, 0, MPI_COMM_WORLD, &status);
@@ -171,16 +169,17 @@ int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB, int
 				}
 			}
 
-			printf("================================\n");
-			for(int f = 0; f < (sizeB + 1); f++){
-				printf(" %5d ", B[f]);
-			}
-			printf("\n================================\n");
+			// printf("================================\n");
+			// for(int f = 0; f < (sizeB + 1); f++){
+			// 	printf(" %5d ", B[f]);
+			// }
+			// printf("\n================================\n");
 
 			MPI_Ssend(&B[0], (sizeB + 1), MPI_UNSIGNED_SHORT, 0, 0, MPI_COMM_WORLD);
 
 			printf("Rank %d - ENVIEI!\n", rank);
-		}
+
+		} while (coluna2 != sizeA);
 	}	
 
 	MPI_Finalize();
