@@ -2,7 +2,7 @@
 	Viviane da Rosa Sommer - GRR20182564
 	
     Como rodar:
-        mpicc paralela.c -o paralela  
+        mpicc paralela.c -o paralela -O3
         mpirun -np 2 ./paralela
 */
 
@@ -64,7 +64,7 @@ mtype ** allocateScoreMatrix(int sizeA, int sizeB) {
     // }
 
 	mtype ** scoreMatrix = malloc((sizeB + 1) * sizeof(mtype *));        /*allocating pointers */
-	scoreMatrix[0] = malloc((sizeB + 1) * (sizeA + 1) * sizeof(mtype *));  /* allocating data */
+	scoreMatrix[0] = malloc((sizeB + 1) * (sizeA + 1) * sizeof(mtype));  /* allocating data */
 	for(i=1; i<(sizeA + 1); i++){
 		scoreMatrix[i]=&(scoreMatrix[0][i*(sizeA + 1)]);
 	}
@@ -85,42 +85,11 @@ void initScoreMatrix(mtype ** scoreMatrix, int sizeA, int sizeB) {
     }
 }
 
-void printMatrix(char * seqA, char * seqB, mtype ** scoreMatrix, int sizeA,int sizeB) {
-	
-    int i, j;
-	printf("Score Matrix:\n");
-	printf("========================================\n");
-	printf("    ");
-	printf("%5c   ", ' ');
-
-	for (j = 0; j < sizeA; j++){
-		printf("%5c   ", seqA[j]);
-    }
-
-	printf("\n");
-
-	for (i = 0; i < sizeB + 1; i++) {
-		if (i == 0){
-			printf("    ");
-        }
-		else{
-			printf("%c   ", seqB[i - 1]);
-        }
-		for (j = 0; j < sizeA + 1; j++) {
-			printf("%5d   ", scoreMatrix[i][j]);
-		}
-		printf("\n");
-	}
-
-	printf("========================================\n");
-}
-
 int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB, int numero_processos, int rank) {
 
 	int coluna1 = 0, coluna2 = 1, l = 0, destino = 0;
 
-	mtype *A = malloc(sizeof(unsigned char) * (sizeB + 1));
-	mtype *B = malloc(sizeof(unsigned char) * (sizeB + 1));
+	mtype result;
 
     MPI_Datatype col_matrix;
 	MPI_Status status;
@@ -146,10 +115,10 @@ int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB, int
             }
 		}
 
-		printMatrix(seqA, seqB, scoreMatrix, sizeA, sizeB);
-
-
 	} else {
+
+		mtype *A = malloc(sizeof(unsigned char) * (sizeB + 1));
+		mtype *B = malloc(sizeof(unsigned char) * (sizeB + 1));
 
 		int termina_mod = sizeA % (numero_processos - 1);
 		int termina_div = sizeA / (numero_processos - 1);
@@ -191,57 +160,53 @@ int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB, int
 	return scoreMatrix[sizeB][sizeA];
 }
 
-void freeScoreMatrix(mtype **scoreMatrix, int sizeB) {
-
-	int i;
-
-	for (i = 0; i < (sizeB + 1); i++){
-		free(scoreMatrix[i]);
-    }
-
-	free(scoreMatrix);
-}
-
 int main(int argc, char ** argv) {
+	
 
 	char *seqA, *seqB;
 	int sizeA, sizeB, rank, numero_processos;
-	double start, start_read_seq, start_allocateScoreMatrix, end , end_read_seq, end_allocateScoreMatrix; 
-    double tempo_total, tempo_sequencial, inicio, fim;	
+	double inicio_serial, fim_serial, inicio_paralela, fim_paralela, inicio_total, fim_total;
 
-	seqA = read_seq("sequenciaA.in");
-	seqB = read_seq("sequenciaB.in");
+	// inicio_total = MPI_Wtime();
 
-	sizeA = strlen(seqA);
-	sizeB = strlen(seqB);
+	// SERIAL --------------------------------------------------------------------------------
+	// inicio_serial = MPI_Wtime();	
 
-	mtype ** scoreMatrix = allocateScoreMatrix(sizeA, sizeB);
+		seqA = read_seq("sequenciaA.in");
+		seqB = read_seq("sequenciaB.in");
+		sizeA = strlen(seqA);
+		sizeB = strlen(seqB);
+		mtype ** scoreMatrix = allocateScoreMatrix(sizeA, sizeB);
+		initScoreMatrix(scoreMatrix, sizeA, sizeB);
 
-	initScoreMatrix(scoreMatrix, sizeA, sizeB);
+	// fim_serial = inicio_serial - MPI_Wtime();
+	//----------------------------------------------------------------------------------------
 
-	// MPI ----------------------------------------------------------------
+	// MPI -----------------------------------------------------------------------------------
 	MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &numero_processos);
 
-	inicio = MPI_Wtime();	
+	inicio_paralela = MPI_Wtime();	
 
-	mtype score = LCS(scoreMatrix, sizeA, sizeB, seqA, seqB, numero_processos, rank);
+		MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+		MPI_Comm_size(MPI_COMM_WORLD, &numero_processos);
 
-	// printMatrix(seqA, seqB, scoreMatrix, sizeA, sizeB);
+		mtype score = LCS(scoreMatrix, sizeA, sizeB, seqA, seqB, numero_processos, rank);
 
-	fim = MPI_Wtime();
-	tempo_total = inicio - fim;
-    
-    MPI_Finalize();
-	//--------------------------------------------------------------------
+	fim_paralela = inicio_paralela - MPI_Wtime();
+	//----------------------------------------------------------------------------------------
+
+	// fim_total= inicio_total - MPI_Wtime();
 
 	if (rank == 0){
 		printf("\nScore: %d\n", score);
-		printf("Tempo total: %f\n", tempo_total);
+		// printf("Serial: %f\n", fim_serial);
+		printf("Paralelo: %f\n", fim_paralela);
+		// printf("Total:%f\n", fim_total);
+	} else {
+		puts("Terminei também!!");
 	}
 
-	// freeScoreMatrix(scoreMatrix, sizeB);
+	MPI_Finalize();
 	
 	return EXIT_SUCCESS;
 }

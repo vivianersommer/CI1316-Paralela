@@ -166,10 +166,10 @@ int main(int argc, char ** argv) {
 
 	/* if you wish to see the entire score matrix,
 	 for debug purposes, define DEBUGMATRIX. */
-	printMatrix(seqA, seqB, scoreMatrix, sizeA, sizeB);
+	// printMatrix(seqA, seqB, scoreMatrix, sizeA, sizeB);
 
 	//print score
-	// printf("\nScore: %d\n", score);
+	printf("\nScore: %d\n", score);
 
 	//free score matrix
 	freeScoreMatrix(scoreMatrix, sizeB);
