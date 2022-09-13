@@ -191,10 +191,7 @@ int main(int argc, char ** argv) {
 	fim_total= MPI_Wtime() - inicio_total;
 
 	if (rank == 0){
-		printf("\nScore: %d\n", score);
-		printf("Serial: %f\n", fim_serial);
-		printf("Paralelo: %f\n", fim_paralela);
-		printf("Total:%f\n", fim_total);
+		printf("%f\n", fim_total);
 	}
 
 	MPI_Finalize();

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #ifndef max
 #define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
@@ -131,54 +132,30 @@ void freeScoreMatrix(mtype **scoreMatrix, int sizeB) {
 }
 
 int main(int argc, char ** argv) {
-	// sequence pointers for both sequences
-	char *seqA, *seqB;
 
-	// sizes of both sequences
+	clock_t t;
+    t = clock();
+
+	char *seqA, *seqB;
 	int sizeA, sizeB;
 
-	double start, start_read_seq, start_allocateScoreMatrix; 
-	double end , end_read_seq, end_allocateScoreMatrix; 
-	// start = omp_get_wtime(); 
-
-	// omp_set_num_threads(1);
-
-	//read both sequences
-	// start_read_seq = omp_get_wtime();
 	seqA = read_seq("sequenciaA.in");
 	seqB = read_seq("sequenciaB.in");
-	// end_read_seq = omp_get_wtime();
 
-	//find out sizes
 	sizeA = strlen(seqA);
 	sizeB = strlen(seqB);
 
-	// allocate LCS score matrix
-	// start_allocateScoreMatrix = omp_get_wtime();
 	mtype ** scoreMatrix = allocateScoreMatrix(sizeA, sizeB);
-	// end_allocateScoreMatrix = omp_get_wtime();
-
-	//initialize LCS score matrix
 	initScoreMatrix(scoreMatrix, sizeA, sizeB);
 
-	//fill up the rest of the matrix and return final score (element locate at the last line and collumn)
 	mtype score = LCS(scoreMatrix, sizeA, sizeB, seqA, seqB);
 
-	/* if you wish to see the entire score matrix,
-	 for debug purposes, define DEBUGMATRIX. */
-	// printMatrix(seqA, seqB, scoreMatrix, sizeA, sizeB);
-
-	//print score
-	printf("\nScore: %d\n", score);
-
-	//free score matrix
 	freeScoreMatrix(scoreMatrix, sizeB);
 
-	// end = omp_get_wtime(); 
-	
-	// printf("%f\n", end - start);
-	// printf("read_seq took %f seconds\n", end_read_seq - start_read_seq);
-	// printf("allocateScoreMatrix took %f seconds\n", end_allocateScoreMatrix - start_allocateScoreMatrix);
+    double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
+
+	printf("%f\n", time_taken);
+
 
 	return EXIT_SUCCESS;
 }

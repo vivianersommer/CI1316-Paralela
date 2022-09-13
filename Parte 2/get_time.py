@@ -1,20 +1,20 @@
 import os
 
 # SERIAL ----------------------------------------------------------
-print("Compilando ...")
-os.system('gcc lcs.c -o lcs -O3')
+# print("Compilando ...")
+# os.system('gcc lcs.c -o lcs -O3')
 
-print("Executando ...")
+# print("Executando ...")
 
-for i in range(1):
+# for i in range(20):
 
-    print("Executando " + str(i + 1) + "...")
+#     print("Executando " + str(i + 1) + "...")
  
-    stream = os.popen('time ./lcs')
-    output = stream.read()
+#     stream = os.popen('./lcs')
+#     output = stream.read()
 
-    with open('results-serial.txt', 'a') as f:
-        f.write(output)
+#     with open('results-serial.txt', 'a') as f:
+#         f.write(output)
 
 # ----------------------------------------------------------------
 
@@ -29,7 +29,7 @@ for i in range(20):
 
     print("Executando " + str(i + 1) + "...")
  
-    stream = os.popen('mpirun -np 8 ./paralela')
+    stream = os.popen('mpirun -np 4 ./paralela')
     output = stream.read()
 
     with open('results-paralela.txt', 'a') as f:
