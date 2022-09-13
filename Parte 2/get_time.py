@@ -29,7 +29,7 @@ for i in range(20):
 
     print("Executando " + str(i + 1) + "...")
  
-    stream = os.popen('mpirun -np 2 ./paralela')
+    stream = os.popen('mpirun -np 8 ./paralela')
     output = stream.read()
 
     with open('results-paralela.txt', 'a') as f:
