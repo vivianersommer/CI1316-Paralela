@@ -167,8 +167,8 @@ int main(int argc, char ** argv) {
 	// SERIAL --------------------------------------------------------------------------------
 	inicio_serial = MPI_Wtime();	
 
-		seqA = read_seq("sequenciaA.in");
-		seqB = read_seq("sequenciaB.in");
+		seqA = read_seq("fileA.in");
+		seqB = read_seq("fileB.in");
 		sizeA = strlen(seqA);
 		sizeB = strlen(seqB);
 		mtype ** scoreMatrix = allocateScoreMatrix(sizeA, sizeB);
